@@ -1,12 +1,10 @@
-/*
-一些零碎的功能接口:
-- 获取系统时间
-- 判断文件是否存在
-- 获取文件的所在目录路径
-- 创建目录
-*/
+/**
+ * @file util.hpp
+ * @brief 工具函数的封装
+ * @author zch
+ * @date 2025-11-02
+ */
 
-#pragma once
 #ifndef UTIL_H__
 #define UTIL_H__
 
