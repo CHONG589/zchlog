@@ -39,6 +39,12 @@ namespace zch {
 	public:
 		// 判断文件是否存在
 		static bool IsExist(const std::string& path) {
+            // stat 是一个用于获取文件或文件夹状态信息的函数，
+            // 通常在 C 编程中使用。它可以用于检查文件的存在性、
+            // 文件类型、文件大小、修改时间等属性。
+            // st 表示一个指向 struct stat 结构体的指针，用于
+            // 存储获取到的文件状态信息，返回 0 表示获取成功，这个
+            // 系统调用在文件不存在的情况下会调用失败，返回 -1.
 			struct stat st;
 			if (stat(path.c_str(), &st) == 0) {
 				return true;
@@ -48,8 +54,9 @@ namespace zch {
 			}
 		}
 
-		// 获取文件的所在目录路径
-		static std::string GetPath(const std::string& path) {
+		// 获取文件的所在目录路径，如：/home/abc/test/a.txt，目录路径为：
+        // /home/abc/test/ 或者 /home/abc/test
+		static std::string GetDirPath(const std::string& path) {
 			size_t pos = path.find_last_of("/\\");
 			if (pos == std::string::npos) {
 				return ".";
@@ -61,7 +68,10 @@ namespace zch {
 
 		// 创建目录
 		static void CreateDirectory(const std::string& path) {
-			if (path.size() == 0) return;
+			if (path.size() == 0) {
+                return;
+            }
+
 			umask(0);
 			// 测试样例：
 			// /home/abc/test/  	/home/abc/test
@@ -70,6 +80,7 @@ namespace zch {
 			size_t cur = 0, pos = 0;
 			std::string parent_dir;
 
+            // cur 是当前位置，pos 是目录分隔符位置
 			while (cur < path.size()) {
 				pos = path.find_first_of("/\\", cur);
 				// 截取父级路径
