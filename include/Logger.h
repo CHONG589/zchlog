@@ -120,6 +120,120 @@ namespace zch {
 		// 异步日志器
 		Async_Logger
 	};
+
+    class LoggerBuilder {
+	public:
+		LoggerBuilder() :_logger_type(LoggerType::Sync_Logger)
+			            , _limit(LogLevel::Level::DEBUG)
+			            , _async_type(ASYNCTYPE::ASYNC_SAFE) {}
+
+		// 开启非安全模式 
+		void BuildEnableUnSafe() { _async_type = ASYNCTYPE::ASYNC_UN_SAFE; }
+
+		// 构建日志器类型
+		void BuildType(LoggerType logger_type = LoggerType::Sync_Logger) { _logger_type = logger_type; }
+
+		// 构建日志器的名称
+		void BuildName(const std::string& logger_name) { _logger_name = logger_name; }
+
+		// 构建日志限制输出等级
+		void BuildLevel(LogLevel::Level limit) { _limit = limit; }
+
+		// 构建格式化器
+		void BuildFormatter(const std::string& pattern = "[%d{%H:%M:%S}][%p][%f:%l]%m%n") {
+			_formatter = std::make_shared<Formatter>(pattern);
+		}
+
+		// 构建落地方向数组
+		template<class SinkType, class ...Args>
+		void AddLogSink(Args&&... args) {
+			LogSink::ptr sink = SinkFactory::create<SinkType>(std::forward<Args>(args)...);
+			_sinks.push_back(sink);
+		}
+
+		// 构建日志器
+		virtual Logger::ptr Build() = 0;
+
+	protected:
+		// 异步日志器的写入是否开启非安全模式
+		ASYNCTYPE  _async_type;
+		// 日志器的类型，同步 or 异步
+		LoggerType _logger_type;
+		// 日志器的名称 (每一个日志器的唯一标识)
+		std::string _logger_name;
+		// 日志限制输出等级
+		LogLevel::Level _limit;
+		// 格式化器
+		Formatter::ptr	_formatter;
+		// 日志落地方向数组
+		std::vector<LogSink::ptr> _sinks;
+	};
+
+    // 局部日志器建造者
+	class LocalLoggerBuilder : public LoggerBuilder {
+	public:
+		Logger::ptr Build() override;
+	};
+
+    // 日志器管理者
+	class LogManager {
+	public:
+		// 得到实例化对象
+		static LogManager& GetInstance() {
+			static LogManager ins;
+			return ins;
+		}
+
+		// 添加日志器
+		void AddLogger(const Logger::ptr& logger) {
+			if (HasLogger(logger->GetLoggerName())) {
+				return;
+			}
+
+			std::unique_lock<std::mutex> ulk(_mtx_loggers);
+			_loggers[logger->GetLoggerName()] = logger;
+		}
+
+		// 判断日志器集合中是否存在指定的日志器
+		bool HasLogger(const std::string& logger_name) {
+			std::unique_lock<std::mutex> ulk(_mtx_loggers);
+			return _loggers.find(logger_name) != _loggers.end();
+		}
+
+		// 返回默认日志器
+		const Logger::ptr& DefaultLogger() {
+			return _default_logger;
+		}
+
+		// 返回指定日志器
+		const Logger::ptr& GetLogger(const std::string& logger_name) {
+			return _loggers[logger_name];
+		}
+
+	private:
+		LogManager() {
+			std::unique_ptr<LoggerBuilder> builder(new LocalLoggerBuilder());
+			builder->BuildName("default");
+			_default_logger = builder->Build();
+			AddLogger(_default_logger);
+		}
+
+		LogManager(const LogManager&) = delete;
+
+	private:
+		// 用于保证_loggers(日志器对象集合)线程安全的锁
+		std::mutex _mtx_loggers;
+		// 默认 logger 日志器
+		Logger::ptr _default_logger;
+		// 日志器对象集合
+		std::unordered_map<std::string, Logger::ptr> _loggers;
+	};
+
+    // 全局建造者,通过全局建造者建造出的对象会自动添加到 LogManager 对象中
+	class GlobalLoggerBuilder : public LoggerBuilder {
+	public:
+		Logger::ptr Build() override;
+	};
 }
 
 #endif

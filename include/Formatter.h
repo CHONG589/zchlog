@@ -154,7 +154,7 @@ namespace zch {
 	class Formatter {
 	public:
 		using ptr = std::shared_ptr<Formatter>;
-		Formatter(const std::string& pattern = "[%d{%H:%M:%S}][%p][%c][%t][%f:%l]%T%m%n") : _pattern(pattern) {
+		Formatter(const std::string& pattern = "[%d{%H:%M:%S}][%p][%f:%l]%m%n") : _pattern(pattern) {
 			assert(ParsePattern());
 		}
 

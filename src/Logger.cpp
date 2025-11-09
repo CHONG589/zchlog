@@ -2,7 +2,7 @@
 
 void zch::Logger::Debug(const std::string& file, size_t line, const char* fmt, ...) {
 	// 1. 判断当前日志能否输出
-	if (LogLevel::Level::DEBUGE < _limit_level) {
+	if (LogLevel::Level::DEBUG < _limit_level) {
 		return;
 	}
 
@@ -59,7 +59,7 @@ void zch::Logger::Info(const std::string& file, size_t line, const char* fmt, ..
 
 void zch::Logger::Warn(const std::string& file, size_t line, const char* fmt, ...) {
 	// 1. 判断当前日志能否输出
-	if (LogLevel::Level::WARNNING < _limit_level) {
+	if (LogLevel::Level::WARN < _limit_level) {
 		return;
 	}
 
@@ -74,7 +74,7 @@ void zch::Logger::Warn(const std::string& file, size_t line, const char* fmt, ..
 	va_end(ap);
 
 	// 3. 形成LogMsg结构体
-	LogMsg msg(LogLevel::Level::WARNNING, _logger, file, line, std::string(payload));
+	LogMsg msg(LogLevel::Level::WARN, _logger, file, line, std::string(payload));
 	// 4. 形成日志消息字符串
 	std::string log_message = _formatter->Format(msg);
 	// 5. 将日志消息字符串进行落地
@@ -149,4 +149,47 @@ void zch::AsyncLogger::RealSink(Buffer& buf) {
 			sink->log(buf.Start(), buf.ReadableSize());
 		}
 	}
+}
+
+zch::Logger::ptr zch::LocalLoggerBuilder::Build() {
+	// 不能没有日志器名称
+	assert(!_logger_name.empty());
+
+	// 如果用户没有手动设置过格式化器，就进行构造一个默认的格式化器
+	if (_formatter.get() == nullptr) {
+		_formatter = std::make_shared<Formatter>();
+	}
+
+	// 如果用户没有手动设置过落地方向数组，就进行默认设置一个的落地到标准输出的格式化器
+	if (_sinks.empty()) {
+		_sinks.push_back(SinkFactory::create<StdOutSink>());
+	}
+
+	// 根据日志器的类型构造相应类型的日志器
+	if (_logger_type == LoggerType::Async_Logger) {
+		return std::make_shared<AsyncLogger>(_logger_name, _limit, _formatter, _sinks, _async_type);
+	}
+	return std::make_shared<SyncLogger>(_logger_name, _limit, _formatter, _sinks);
+}
+
+zch::Logger::ptr zch::GlobalLoggerBuilder::Build() {
+	assert(!_logger_name.empty());
+	if (_formatter.get() == nullptr) {
+		_formatter = std::make_shared<Formatter>();
+	}
+
+	if (_sinks.empty()) {
+		_sinks.push_back(SinkFactory::create<StdOutSink>());
+	}
+
+	Logger::ptr logger;
+	if (_logger_type == LoggerType::Async_Logger) {
+		logger = std::make_shared<AsyncLogger>(_logger_name, _limit, _formatter, _sinks, _async_type);
+	} else {
+		logger = std::make_shared<SyncLogger>(_logger_name, _limit, _formatter, _sinks);
+	}
+
+	LogManager::GetInstance().AddLogger(logger);
+
+	return logger;
 }
