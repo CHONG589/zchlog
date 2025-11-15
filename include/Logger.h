@@ -25,9 +25,9 @@ namespace zch {
     public:
         using ptr = std::shared_ptr<Logger>;
         Logger(const std::string logger
-                , LogLevel::Level level
-                , Formatter::ptr formatter
-                , std::vector<LogSink::ptr> sinks)
+                , zch::LogLevel::Level level
+                , zch::Formatter::ptr formatter
+                , std::vector<zch::LogSink::ptr> sinks)
 			    : _logger(logger)
                 , _limit_level(level)
                 , _formatter(formatter)
@@ -73,9 +73,9 @@ namespace zch {
     class SyncLogger : public Logger {
     public:
         SyncLogger(const std::string logger
-                    , LogLevel::Level level
-                    , Formatter::ptr formatter
-                    , std::vector<LogSink::ptr> sinks)
+                    , zch::LogLevel::Level level
+                    , zch::Formatter::ptr formatter
+                    , std::vector<zch::LogSink::ptr> sinks)
 			        : Logger(logger, level, formatter, sinks) {}
 
     protected:
@@ -86,9 +86,9 @@ namespace zch {
     class AsyncLogger : public Logger {
 	public:
 		AsyncLogger(const std::string logger
-                    , LogLevel::Level level
-                    , Formatter::ptr formatter
-                    , std::vector<LogSink::ptr> sinks
+                    , zch::LogLevel::Level level
+                    , zch::Formatter::ptr formatter
+                    , std::vector<zch::LogSink::ptr> sinks
                     , ASYNCTYPE type)
 			        : Logger(logger, level, formatter, sinks)
 			        , _lopper(std::bind(&AsyncLogger::RealSink, this, std::placeholders::_1)
@@ -123,9 +123,9 @@ namespace zch {
 
     class LoggerBuilder {
 	public:
-		LoggerBuilder() :_logger_type(LoggerType::Sync_Logger)
-			            , _limit(LogLevel::Level::DEBUG)
-			            , _async_type(ASYNCTYPE::ASYNC_SAFE) {}
+		LoggerBuilder() : _async_type(ASYNCTYPE::ASYNC_SAFE)
+			            , _logger_type(LoggerType::Sync_Logger)
+			            , _limit(LogLevel::Level::DEBUG) {}
 
 		// 开启非安全模式 
 		void BuildEnableUnSafe() { _async_type = ASYNCTYPE::ASYNC_UN_SAFE; }
@@ -141,7 +141,7 @@ namespace zch {
 
 		// 构建格式化器
 		void BuildFormatter(const std::string& pattern = "[%d{%H:%M:%S}][%p][%f:%l]%m%n") {
-			_formatter = std::make_shared<Formatter>(pattern);
+			_formatter = std::make_shared<zch::Formatter>(pattern);
 		}
 
 		// 构建落地方向数组
@@ -162,11 +162,11 @@ namespace zch {
 		// 日志器的名称 (每一个日志器的唯一标识)
 		std::string _logger_name;
 		// 日志限制输出等级
-		LogLevel::Level _limit;
+		zch::LogLevel::Level _limit;
 		// 格式化器
-		Formatter::ptr	_formatter;
+		zch::Formatter::ptr	_formatter;
 		// 日志落地方向数组
-		std::vector<LogSink::ptr> _sinks;
+		std::vector<zch::LogSink::ptr> _sinks;
 	};
 
     // 局部日志器建造者
@@ -221,7 +221,7 @@ namespace zch {
 		LogManager(const LogManager&) = delete;
 
 	private:
-		// 用于保证_loggers(日志器对象集合)线程安全的锁
+		// 用于保证 _loggers(日志器对象集合)线程安全的锁
 		std::mutex _mtx_loggers;
 		// 默认 logger 日志器
 		Logger::ptr _default_logger;

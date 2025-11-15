@@ -27,15 +27,14 @@ namespace zch {
 
     class AsynLopper {
     public:
-        using cb_t = std::function<void(Buffer&)>;
-		using ptr = std::shared_ptr<AsynLopper>;
+        using cb_t = std::function<void(zch::Buffer&)>;
+		using ptr = std::shared_ptr<zch::AsynLopper>;
 
         AsynLopper(cb_t call_back, ASYNCTYPE type = ASYNCTYPE::ASYNC_SAFE)
-			        : _type(type)
-                    , _stop(false)
-                    , _call_back(call_back)
-                    , _td(&AsynLopper::ThreadEntry
-                    , this) {}
+			        : _type(type) 
+					, _stop(false)
+                    , _td(&AsynLopper::ThreadEntry, this)
+					, _call_back(call_back) {}
 
         // 向生产者缓冲区放入数据
 		void Push(const char* data, size_t len);
@@ -68,9 +67,9 @@ namespace zch {
 		// 保护生产者缓冲区的锁
 		std::mutex _mtx_pro_buf;
 		// 生产者缓冲区
-		Buffer _pro_buf;
+		zch::Buffer _pro_buf;
 		// 消费者缓冲区
-		Buffer _con_buf;
+		zch::Buffer _con_buf;
 		// 生产者条件变量
 		std::condition_variable _cond_pro;
 		// 消费者条件变量

@@ -157,7 +157,7 @@ zch::Logger::ptr zch::LocalLoggerBuilder::Build() {
 
 	// 如果用户没有手动设置过格式化器，就进行构造一个默认的格式化器
 	if (_formatter.get() == nullptr) {
-		_formatter = std::make_shared<Formatter>();
+		_formatter = std::make_shared<zch::Formatter>();
 	}
 
 	// 如果用户没有手动设置过落地方向数组，就进行默认设置一个的落地到标准输出的格式化器
@@ -167,19 +167,19 @@ zch::Logger::ptr zch::LocalLoggerBuilder::Build() {
 
 	// 根据日志器的类型构造相应类型的日志器
 	if (_logger_type == LoggerType::Async_Logger) {
-		return std::make_shared<AsyncLogger>(_logger_name, _limit, _formatter, _sinks, _async_type);
+		return std::make_shared<zch::AsyncLogger>(_logger_name, _limit, _formatter, _sinks, _async_type);
 	}
-	return std::make_shared<SyncLogger>(_logger_name, _limit, _formatter, _sinks);
+	return std::make_shared<zch::SyncLogger>(_logger_name, _limit, _formatter, _sinks);
 }
 
 zch::Logger::ptr zch::GlobalLoggerBuilder::Build() {
 	assert(!_logger_name.empty());
 	if (_formatter.get() == nullptr) {
-		_formatter = std::make_shared<Formatter>();
+		_formatter = std::make_shared<zch::Formatter>();
 	}
 
 	if (_sinks.empty()) {
-		_sinks.push_back(SinkFactory::create<StdOutSink>());
+		_sinks.push_back(zch::SinkFactory::create<zch::StdOutSink>());
 	}
 
 	Logger::ptr logger;
