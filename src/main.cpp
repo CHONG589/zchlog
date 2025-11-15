@@ -1,16 +1,15 @@
 #include "../include/Formatter.h"
+#include "../include/LogSink.h"
+#include "../include/Logger.h"
+#include "../include/Log.h"
 
 int main() {
 
-    zch::LogMsg msg;
-	msg._ctime = zch::Date::Now();
-	msg._level = zch::LogLevel::Level::WARN;
-	msg._file = "test.cpp";
-	msg._line = 38;
-	msg._logger = "root";
-	msg._payload = "测试日志";
-	zch::Formatter formatter("%d{%H:%M:%S}[%p][%c][%f:%l]%m%n");
-	std::cout << formatter.Format(msg) << std::endl;
+	DEBUG("%s", "测试日志");
+	INFO("%s", "测试日志");
+	WARN("%s", "测试日志");
+	ERROR("%s", "测试日志");
+	FATAL("%s", "测试日志");
 
     return 0;
 }
